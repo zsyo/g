@@ -39,7 +39,7 @@
   if [[ -n $(alias g 2>/dev/null) ]]; then
       unalias g
   fi
-  EOF 
+  EOF
   $ source "$HOME/.g/env"
   ```
 
@@ -109,7 +109,7 @@ $ g ls-remote stable
 
 ```shell
 $ g install 1.14.7
-Downloading 100% [===============] (92/92 MB, 12 MB/s)               
+Downloading 100% [===============] (92/92 MB, 12 MB/s)
 Computing checksum with SHA256
 Checksums matched
 Now using go1.20.5
@@ -161,7 +161,7 @@ Uninstalled go1.19.10
 清空 go 安装包文件缓存
 
 ```shell
-$ g clean 
+$ g clean
 Remove go1.18.10.darwin-arm64.tar.gz
 Remove go1.19.10.darwin-arm64.tar.gz
 Remove go1.20.5.darwin-arm64.tar.gz
@@ -213,6 +213,10 @@ Remove /Users/voidint/.g
 
   按照惯例，g 默认会将`~/.g`目录作为其家目录。若想自定义家目录（Windows 用户需求强烈），可使用该环境变量切换到其他家目录。由于**该特性还属于实验特性**，需要先开启实验特性开关`G_EXPERIMENTAL=true`才能生效。特别注意，该方案并不十分完美，因此才将其归类为实验特性，详见[#18](https://github.com/voidint/g/issues/18)。
 
+- 环境变量`G_COPY`有什么作用？
+
+  当该环境变量的值为`true`时，将在安装 go 版本时同时在 g 的家目录同步拷贝一个新版本的全量文件夹 `go_copy` (仅用于Windows用户在用Goland+wsl的时候指定GOROOT用，避免每次安装 go 新版本都要重新选择GOROOT)。
+
 - macOS 系统下安装 go 版本，g 抛出`[g] Installation package not found`字样的错误提示，是什么原因？
 
   Go 官方在**1.16**版本中才[加入了对 ARM 架构的 macOS 系统的支持](https://go.dev/doc/go1.16#darwin)。因此，ARM 架构的 macOS 系统下均无法安装 1.15 及以下的版本的 go 安装包。若尝试安装这些版本，g 会抛出`[g] Installation package not found`的错误信息。
@@ -232,7 +236,7 @@ Remove /Users/voidint/.g
 - 使用 g 安装了某个 go 版本后，执行`go version`命令，但输出的 go 版本号并非是所安装的那个版本，这是不是 bug ？
 
   由于当前 shell 环境中`PATH`环境变量设置有误导致（建议执行`which go`查看二进制文件所在路径）。在未修改 g 家目录的情况下，二进制文件 go 的路径应该是`~/.g/go/bin/go`，如果不是这个路径，就说明`PATH`环境变量设置有误。
-  
+
 - 支持源代码编译安装吗？
 
   不支持

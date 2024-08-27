@@ -12,6 +12,7 @@ var envNames = []string{
 	homeEnv,
 	mirrorEnv,
 	experimentalEnv,
+	copyEnv,
 }
 
 func showEnv(ctx *cli.Context) (err error) {

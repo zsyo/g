@@ -39,7 +39,7 @@
   if [[ -n $(alias g 2>/dev/null) ]]; then
       unalias g
   fi
-  EOF 
+  EOF
   $ source "$HOME/.g/env"
   ```
 
@@ -109,7 +109,7 @@ To install a specific version of Go (e.g., 1.20.5):
 
 ```shell
 $ g install 1.14.7
-Downloading 100% [===============] (92/92 MB, 12 MB/s)               
+Downloading 100% [===============] (92/92 MB, 12 MB/s)
 Computing checksum with SHA256
 Checksums matched
 Now using go1.20.5
@@ -131,7 +131,7 @@ $ g ls-remote
   1.2.2
   1.3
   1.3.1
-  ...    
+  ...
   1.19.10
   1.20rc1
   1.20rc2
@@ -161,7 +161,7 @@ Uninstalled go1.19.10
 To clear the package file cache for Go installations:
 
 ```shell
-$ g clean 
+$ g clean
 Remove go1.18.10.darwin-arm64.tar.gz
 Remove go1.19.10.darwin-arm64.tar.gz
 Remove go1.20.5.darwin-arm64.tar.gz
@@ -213,6 +213,10 @@ Remove /Users/voidint/.g
 
   By convention, g uses the `~/.g` directory as its home directory. If you want to customize the home directory (especially for Windows users), you can use the G_HOME environment variable to switch to another directory. Since this feature is still experimental, it requires enabling the experimental feature switch `G_EXPERIMENTAL=true` to take effect. Please note that this solution is not perfect, which is why it is classified as an experimental feature. For more details, please refer to [#18](https://github.com/voidint/g/issues/18).
 
+- What does the environment variable `G_COPY` do?
+
+  When the value of this environment variable is `true`, a full folder of the new version `go_copy` will be copied synchronously in the home directory of g at the same time when installing the go version (only used for Windows users to specify GOROOT when using Goland+wsl, to avoid having to re-select GOROOT every time a new version of go is installed).
+
 - On macOS, when installing a go version, g throws an error message saying `[g] Installation package not found.` What is the reason?
 
   The Go official support for ARM architecture on macOS was introduced in version [1.16](https://go.dev/doc/go1.16#darwin). Therefore, go installation packages of version 1.15 and earlier cannot be installed on ARM-based macOS systems. If you attempt to install these versions, g will throw an error message `[g] Installation package not found.`
@@ -232,7 +236,7 @@ Remove /Users/voidint/.g
 - After installing a go version using g, when running the `go version` command, the output shows a different version than the one installed. Is this a bug?
 
   This is likely due to an incorrect setting of the `PATH` environment variable in the current shell environment (it is recommended to run `which go` to see the path of the go binary file). By default, the path to the go binary file should be `~/.g/go/bin/go`. If it is not this path, it means that the PATH environment variable is set incorrectly.
-  
+
 - Does g support compiling and installing from source code?
 
   No, it does not support compiling and installing from source code.
