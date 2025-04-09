@@ -40,14 +40,14 @@ var (
 	ErrEmptyURL = errors.New("empty url")
 )
 
-// PackageNotFoundError 软件包不存在错误
+// PackageNotFoundError indicates the requested package does not exist.
 type PackageNotFoundError struct {
 	kind   string
 	goos   string
 	goarch string
 }
 
-// IsPackageNotFound 若是软件包不存在错误，则返回true；反之，返回false。
+// IsPackageNotFound checks if the error indicates missing package.
 func IsPackageNotFound(err error) bool {
 	if err == nil {
 		return false
@@ -56,7 +56,7 @@ func IsPackageNotFound(err error) bool {
 	return ok
 }
 
-// NewPackageNotFoundError 返回软件包不存在错误实例
+// NewPackageNotFoundError creates a package missing error instance.
 func NewPackageNotFoundError(kind, goos, goarch string) error {
 	return &PackageNotFoundError{
 		kind:   kind,
@@ -65,19 +65,19 @@ func NewPackageNotFoundError(kind, goos, goarch string) error {
 	}
 }
 
-// Error 返回错误详情
+// Error returns detailed error message.
 func (e PackageNotFoundError) Error() string {
 	return fmt.Sprintf("package not found [%s,%s,%s]", e.goos, e.goarch, e.kind)
 }
 
-// VersionNotFoundError 版本不存在错误
+// VersionNotFoundError indicates the specified version is unavailable.
 type VersionNotFoundError struct {
 	version string
 	goos    string
 	goarch  string
 }
 
-// IsVersionNotFound 若是版本不存在错误，返回true；反之，返回false。
+// IsVersionNotFound checks if the error indicates missing version.
 func IsVersionNotFound(err error) bool {
 	if err == nil {
 		return false
@@ -86,7 +86,7 @@ func IsVersionNotFound(err error) bool {
 	return ok
 }
 
-// NewVersionNotFoundError 返回版本不存在错误实例
+// NewVersionNotFoundError creates a version missing error instance.
 func NewVersionNotFoundError(version, goos, goarch string) error {
 	return &VersionNotFoundError{
 		version: version,
@@ -95,23 +95,23 @@ func NewVersionNotFoundError(version, goos, goarch string) error {
 	}
 }
 
-// Error 返回错误详情
+// Error returns detailed error message.
 func (e VersionNotFoundError) Error() string {
 	return fmt.Sprintf("version not found %q [%s,%s]", e.version, e.goos, e.goarch)
 }
 
-// Version 返回版本号
+// Version returns the semantic version string.
 func (e VersionNotFoundError) Version() string {
 	return e.version
 }
 
-// MalformedVersionError 版本号格式错误
+// MalformedVersionError indicates invalid version format.
 type MalformedVersionError struct {
 	err     error
 	version string
 }
 
-// IsMalformedVersion 若是版本号格式错误，返回true；反之，返回false。
+// IsMalformedVersion checks if the error indicates invalid version syntax.
 func IsMalformedVersion(err error) bool {
 	if err == nil {
 		return false
@@ -120,7 +120,7 @@ func IsMalformedVersion(err error) bool {
 	return ok
 }
 
-// NewMalformedVersionError 返回版本号格式错误实例
+// NewMalformedVersionError creates malformed version error instance.
 func NewMalformedVersionError(version string, err error) error {
 	return &MalformedVersionError{
 		err:     err,
@@ -128,28 +128,28 @@ func NewMalformedVersionError(version string, err error) error {
 	}
 }
 
-// Error 返回错误详情
+// Error returns detailed error message.
 func (e MalformedVersionError) Error() string {
 	return fmt.Sprintf("malformed version string %q", e.version)
 }
 
-// Unwrap 返回源错误
+// Unwrap returns the original error object.
 func (e MalformedVersionError) Unwrap() error {
 	return e.err
 }
 
-// Version 返回版本号
+// Version returns the semantic version string.
 func (e MalformedVersionError) Version() string {
 	return e.version
 }
 
-// URLUnreachableError URL不可达错误
+// URLUnreachableError indicates failure to access the remote resource.
 type URLUnreachableError struct {
 	err error
 	url string
 }
 
-// IsURLUnreachable 若是URL不可达错误，返回true；反之，返回false。
+// IsURLUnreachable checks if the error indicates network unreachable.
 func IsURLUnreachable(err error) bool {
 	if err == nil {
 		return false
@@ -158,7 +158,7 @@ func IsURLUnreachable(err error) bool {
 	return ok
 }
 
-// NewURLUnreachableError 返回URL不可达错误实例
+// NewURLUnreachableError creates a URL unreachable error instance.
 func NewURLUnreachableError(url string, err error) error {
 	return &URLUnreachableError{
 		err: err,
@@ -166,7 +166,7 @@ func NewURLUnreachableError(url string, err error) error {
 	}
 }
 
-// Error 返回错误详情
+// Error returns detailed error message.
 func (e URLUnreachableError) Error() string {
 	var buf strings.Builder
 	buf.WriteString(fmt.Sprintf("URL %q is unreachable", e.url))
@@ -176,23 +176,23 @@ func (e URLUnreachableError) Error() string {
 	return buf.String()
 }
 
-// Unwrap 返回源错误
+// Unwrap returns the original error object.
 func (e URLUnreachableError) Unwrap() error {
 	return e.err
 }
 
-// URL 返回URL地址
+// URL returns the resource location URL.
 func (e URLUnreachableError) URL() string {
 	return e.url
 }
 
-// DownloadError 下载失败错误
+// DownloadError indicates failure during file download process.
 type DownloadError struct {
 	url string
 	err error
 }
 
-// IsDownload 若是下载失败错误，返回true；反之，返回false。
+// IsDownload checks if the error occurred during download operation.
 func IsDownload(err error) bool {
 	if err == nil {
 		return false
@@ -201,7 +201,7 @@ func IsDownload(err error) bool {
 	return ok
 }
 
-// NewDownloadError 返回下载失败错误实例
+// NewDownloadError creates a download failure error instance.
 func NewDownloadError(url string, err error) error {
 	return &DownloadError{
 		url: url,
@@ -209,7 +209,7 @@ func NewDownloadError(url string, err error) error {
 	}
 }
 
-// Error 返回错误详情
+// Error returns detailed error message.
 func (e DownloadError) Error() string {
 	var buf strings.Builder
 	buf.WriteString(fmt.Sprintf("resource(%s) download failed", e.url))
@@ -219,12 +219,12 @@ func (e DownloadError) Error() string {
 	return buf.String()
 }
 
-// Unwrap 返回错误对象
+// Unwrap returns the wrapped error.
 func (e DownloadError) Unwrap() error {
 	return e.err
 }
 
-// URL 返回资源URL
+// URL returns the resource location.
 func (e DownloadError) URL() string {
 	return e.url
 }

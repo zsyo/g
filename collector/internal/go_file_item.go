@@ -142,7 +142,7 @@ func Convert2Versions(items []*GoFileItem) (vers []*version.Version, err error) 
 				Size:     pitem.Size,
 			})
 		} else if pitem.isSHA256File() {
-			// 设置校验和及算法
+			// Set checksum and hashing algorithm.
 			for _, ppkg := range pkgMap[ver] {
 				if !strings.HasPrefix(pitem.FileName, ppkg.FileName) {
 					continue

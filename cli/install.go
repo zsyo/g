@@ -42,7 +42,7 @@ func install(ctx *cli.Context) (err error) {
 		return cli.ShowSubcommandHelp(ctx)
 	}
 
-	// 查找版本
+	// Find matching Go version.
 	c, err := collector.NewCollector(strings.Split(os.Getenv(mirrorEnv), mirrorSep)...)
 	if err != nil {
 		return cli.Exit(errstring(err), 1)
@@ -64,12 +64,12 @@ func install(ctx *cli.Context) (err error) {
 	vname = v.Name()
 	targetV := filepath.Join(versionsDir, vname)
 
-	// 检查版本是否已经安装
+	// Check if the version is already installed.
 	if finfo, err := os.Stat(targetV); err == nil && finfo.IsDir() {
 		return cli.Exit(fmt.Sprintf("[g] %q version has been installed.", vname), 1)
 	}
 
-	// 查找版本下当前平台的安装包
+	// Find installation packages for current platform
 	pkgs, err := v.FindPackages(version.ArchiveKind, runtime.GOOS, runtime.GOARCH)
 	if err != nil {
 		return cli.Exit(errstring(err), 1)
@@ -127,7 +127,7 @@ func install(ctx *cli.Context) (err error) {
 	filename := filepath.Join(downloadsDir, fmt.Sprintf("go%s.%s-%s.%s", vname, runtime.GOOS, runtime.GOARCH, ext))
 
 	if _, err = os.Stat(filename); os.IsNotExist(err) {
-		// 本地不存在安装包，从远程下载并检查校验和。
+		// Download package remotely and verify checksum.
 		if _, err = pkg.DownloadWithProgress(filename); err != nil {
 			return cli.Exit(errstring(err), 1)
 		}
@@ -142,7 +142,7 @@ func install(ctx *cli.Context) (err error) {
 
 	} else {
 		if !skipChecksum {
-			// 本地存在安装包，检查校验和。
+			// Verify checksum for local package.
 			fmt.Println("Computing checksum with", pkg.Algorithm)
 			if err = pkg.VerifyChecksum(filename); err != nil {
 				_ = os.Remove(filename)
@@ -152,14 +152,14 @@ func install(ctx *cli.Context) (err error) {
 		}
 	}
 
-	// 删除可能存在的历史垃圾文件
+	// Clean up legacy files.
 	_ = os.RemoveAll(filepath.Join(versionsDir, "go"))
 
-	// 解压安装包
+	// Extract installation archive.
 	if err = archiver.Unarchive(filename, versionsDir); err != nil {
 		return cli.Exit(errstring(err), 1)
 	}
-	// 目录重命名
+	// Rename version directory.
 	if err = os.Rename(filepath.Join(versionsDir, "go"), targetV); err != nil {
 		return cli.Exit(errstring(err), 1)
 	}
@@ -168,7 +168,7 @@ func install(ctx *cli.Context) (err error) {
 		return nil
 	}
 
-	// 重新建立软链接
+	// Recreate symbolic link.
 	_ = os.Remove(goroot)
 
 	if err = mkSymlink(targetV, goroot); err != nil {

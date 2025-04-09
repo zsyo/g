@@ -27,7 +27,7 @@ import (
 )
 
 const (
-	// ShortVersion 短版本号
+	// ShortVersion short version number
 	ShortVersion = "1.7.0"
 )
 
@@ -41,7 +41,7 @@ var (
 	GitCommit string
 )
 
-// Version 生成版本信息
+// Version returns the version information.
 func Version() string {
 	var buf strings.Builder
 	buf.WriteString(ShortVersion)

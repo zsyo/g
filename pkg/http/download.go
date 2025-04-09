@@ -33,13 +33,13 @@ import (
 	"github.com/voidint/g/pkg/errs"
 )
 
-// Download 下载资源并另存为
+// Download saves the remote resource to local file with progress support.
 func Download(srcURL string, filename string, flag int, perm fs.FileMode, withProgress bool) (size int64, err error) {
 	req, err := http.NewRequest(http.MethodGet, srcURL, nil)
 	if err != nil {
 		return 0, errs.NewDownloadError(srcURL, err)
 	}
-	req.Header.Set("User-Agent", "g/"+build.ShortVersion) // 使用默认的ua（"Go-http-client/1.1" / "Go-http-client/2.0"）下载ustc的存档文件会重定向到阿里云镜像
+	req.Header.Set("User-Agent", "g/"+build.ShortVersion) // Custom User-Agent avoids redirection issues when downloading from some mirrors
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return 0, errs.NewDownloadError(srcURL, err)
@@ -89,7 +89,7 @@ func Download(srcURL string, filename string, flag int, perm fs.FileMode, withPr
 	return io.Copy(dst, resp.Body)
 }
 
-// DownloadAsBytes 返回下载资源的原始字节切片
+// DownloadAsBytes fetches the resource and returns its raw byte content.
 func DownloadAsBytes(srcURL string) (data []byte, err error) {
 	resp, err := http.Get(srcURL)
 	if err != nil {
@@ -99,7 +99,7 @@ func DownloadAsBytes(srcURL string) (data []byte, err error) {
 	return io.ReadAll(resp.Body)
 }
 
-// IsSuccess 返回 http 请求是否成功
+// IsSuccess determines if the HTTP status code indicates successful response.
 func IsSuccess(statusCode int) bool {
 	return statusCode >= http.StatusOK && statusCode < http.StatusMultipleChoices
 }

@@ -30,17 +30,17 @@ import (
 	"github.com/voidint/g/pkg/errs"
 )
 
-// Algorithm 校验和算法
+// Algorithm checksum algorithm type
 type Algorithm string
 
 const (
-	// SHA256 校验和算法-sha256
+	// SHA256 algorithm using SHA-256 hash function.
 	SHA256 Algorithm = "SHA256"
-	// SHA1 校验和算法-sha1
+	// SHA1 algorithm using SHA-1 hash function.
 	SHA1 Algorithm = "SHA1"
 )
 
-// VerifyFile 检查目标文件校验和
+// VerifyFile validates file integrity against expected checksum.
 func VerifyFile(algo Algorithm, expectedChecksum, filename string) (err error) {
 	f, err := os.Open(filename)
 	if err != nil {

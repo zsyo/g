@@ -37,14 +37,14 @@ const (
 	Name = "official"
 )
 
-// Collector 官方站点版本采集器
+// Collector collects Go versions from official download page.
 type Collector struct {
 	url  string
 	pURL *stdurl.URL
 	doc  *goquery.Document
 }
 
-// NewCollector 返回采集器实例
+// NewCollector creates a new collector instance for official Go downloads.
 func NewCollector(downloadPageURL string) (*Collector, error) {
 	if downloadPageURL == "" {
 		return nil, errs.ErrEmptyURL
@@ -108,12 +108,12 @@ func (c *Collector) findPackages(table *goquery.Selection) (pkgs []*version.Pack
 	return pkgs
 }
 
-// hasUnstableVersions 返回是否包含非稳定版本的布尔值
+// hasUnstableVersions checks if unstable versions exist in document.
 func (c *Collector) hasUnstableVersions() bool {
 	return c.doc.Find("#unstable").Length() > 0
 }
 
-// StableVersions Return all stable versions
+// StableVersions retrieves all stable Go versions from official releases.
 func (c *Collector) StableVersions() (items []*version.Version, err error) {
 	var divs *goquery.Selection
 	if c.hasUnstableVersions() {
@@ -147,7 +147,7 @@ func (c *Collector) StableVersions() (items []*version.Version, err error) {
 	return items, nil
 }
 
-// UnstableVersions Return all stable versions
+// UnstableVersions fetches pre-release and development builds of Go.
 func (c *Collector) UnstableVersions() (items []*version.Version, err error) {
 	c.doc.Find("#unstable").NextUntil("#archive").EachWithBreak(func(i int, div *goquery.Selection) bool {
 		vname, ok := div.Attr("id")
@@ -174,7 +174,7 @@ func (c *Collector) UnstableVersions() (items []*version.Version, err error) {
 	return items, nil
 }
 
-// ArchivedVersions Return all archived versions
+// ArchivedVersions provides historical Go versions no longer supported.
 func (c *Collector) ArchivedVersions() (items []*version.Version, err error) {
 	c.doc.Find("#archive").Find("div.toggle").EachWithBreak(func(i int, div *goquery.Selection) bool {
 		vname, ok := div.Attr("id")
@@ -201,7 +201,7 @@ func (c *Collector) ArchivedVersions() (items []*version.Version, err error) {
 	return items, nil
 }
 
-// AllVersions 返回所有已知版本
+// AllVersions returns all known Go versions including stable/unstable/archived.
 func (c *Collector) AllVersions() (items []*version.Version, err error) {
 	items, err = c.StableVersions()
 	if err != nil {
