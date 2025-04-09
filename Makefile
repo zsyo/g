@@ -50,12 +50,14 @@ package:
 
 install-tools:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-	go install honnef.co/go/tools/cmd/staticcheck@2023.1
+	go install honnef.co/go/tools/cmd/staticcheck@latest
 	go install github.com/securego/gosec/v2/cmd/gosec@latest
 	go install github.com/google/addlicense@latest
 
 
-lint: install-tools
+lint:
+	# Please make sure you are using the latest go version before executing lint
+	@go version
 	go vet ./...
 	golangci-lint run ./...
 	staticcheck ./...
