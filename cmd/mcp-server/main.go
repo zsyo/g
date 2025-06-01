@@ -39,6 +39,11 @@ func main() {
 		log.Fatal(errors.WithStack(err))
 	}
 
+	envTool, err := protocol.NewTool("g_env", "Show environment variables of g", struct{}{})
+	if err != nil {
+		log.Fatal(errors.WithStack(err))
+	}
+
 	lsTool, err := protocol.NewTool("g_ls", "List installed go sdk versions", struct{}{})
 	if err != nil {
 		log.Fatal(errors.WithStack(err))
@@ -64,6 +69,7 @@ func main() {
 		log.Fatal(errors.WithStack(err))
 	}
 
+	mcpServer.RegisterTool(envTool, envHandler)
 	mcpServer.RegisterTool(lsTool, lsHandler)
 	mcpServer.RegisterTool(lsRemoteTool, lsRemoteHandler)
 	mcpServer.RegisterTool(installTool, installHandler)
