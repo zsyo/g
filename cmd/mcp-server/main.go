@@ -54,9 +54,15 @@ func main() {
 		log.Fatal(errors.WithStack(err))
 	}
 
+	uninstallTool, err := protocol.NewTool("g_uninstall", "Uninstall a go sdk version", UninstallReq{})
+	if err != nil {
+		log.Fatal(errors.WithStack(err))
+	}
+
 	mcpServer.RegisterTool(lsTool, lsHandler)
 	mcpServer.RegisterTool(lsRemoteTool, lsRemoteHandler)
 	mcpServer.RegisterTool(installTool, installHandler)
+	mcpServer.RegisterTool(uninstallTool, uninstallHandler)
 
 	if err = mcpServer.Run(); err != nil {
 		log.Fatal(errors.WithStack(err))
