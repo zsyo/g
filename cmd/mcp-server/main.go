@@ -49,8 +49,14 @@ func main() {
 		log.Fatal(errors.WithStack(err))
 	}
 
+	installTool, err := protocol.NewTool("g_install", "Download and install a go sdk version", InstallReq{})
+	if err != nil {
+		log.Fatal(errors.WithStack(err))
+	}
+
 	mcpServer.RegisterTool(lsTool, lsHandler)
 	mcpServer.RegisterTool(lsRemoteTool, lsRemoteHandler)
+	mcpServer.RegisterTool(installTool, installHandler)
 
 	if err = mcpServer.Run(); err != nil {
 		log.Fatal(errors.WithStack(err))

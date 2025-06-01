@@ -21,17 +21,35 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os/exec"
+	"strings"
 
 	"github.com/ThinkInAIXYZ/go-mcp/protocol"
 	"github.com/pkg/errors"
 )
 
-func lsHandler(ctx context.Context, req *protocol.CallToolRequest) (*protocol.CallToolResult, error) {
-	cmd := exec.CommandContext(ctx, "g", "ls", "-o", "json")
-	output, err := cmd.Output()
+type InstallReq struct {
+	Version string `json:"version" description:"go sdk version keywords" required:"true"`
+	Nouse   bool   `json:"nouse" description:"don't use the version after installed" required:"false"`
+}
+
+func installHandler(ctx context.Context, req *protocol.CallToolRequest) (*protocol.CallToolResult, error) {
+	var installReq InstallReq
+	if err := protocol.VerifyAndUnmarshal(req.RawArguments, &installReq); err != nil {
+		return nil, err
+	}
+
+	cmd := exec.CommandContext(ctx, "g", "install", fmt.Sprintf("--nouse=%t", installReq.Nouse), installReq.Version)
+	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return nil, errors.WithStack(err)
+	}
+
+	if !strings.Contains(string(output), "installed") {
+		if output, err = exec.CommandContext(ctx, "go", "version").Output(); err != nil {
+			return nil, errors.WithStack(err)
+		}
 	}
 
 	return &protocol.CallToolResult{

@@ -30,7 +30,7 @@ import (
 
 func lsRemoteHandler(ctx context.Context, req *protocol.CallToolRequest) (*protocol.CallToolResult, error) {
 	cmd := exec.CommandContext(ctx, "g", "ls-remote", "-o", "json")
-	output, err := cmd.CombinedOutput()
+	output, err := cmd.Output()
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
