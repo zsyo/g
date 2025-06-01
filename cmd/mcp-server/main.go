@@ -44,6 +44,11 @@ func main() {
 		log.Fatal(errors.WithStack(err))
 	}
 
+	cleanTool, err := protocol.NewTool("g_clean", "Delete the cached installation package files", struct{}{})
+	if err != nil {
+		log.Fatal(errors.WithStack(err))
+	}
+
 	lsTool, err := protocol.NewTool("g_ls", "List installed go sdk versions", struct{}{})
 	if err != nil {
 		log.Fatal(errors.WithStack(err))
@@ -70,6 +75,7 @@ func main() {
 	}
 
 	mcpServer.RegisterTool(envTool, envHandler)
+	mcpServer.RegisterTool(cleanTool, cleanHandler)
 	mcpServer.RegisterTool(lsTool, lsHandler)
 	mcpServer.RegisterTool(lsRemoteTool, lsRemoteHandler)
 	mcpServer.RegisterTool(installTool, installHandler)
