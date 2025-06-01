@@ -43,7 +43,14 @@ func main() {
 	if err != nil {
 		log.Fatal(errors.WithStack(err))
 	}
+
+	lsRemoteTool, err := protocol.NewTool("g_ls-remote", "List remote go sdk versions available for install", struct{}{})
+	if err != nil {
+		log.Fatal(errors.WithStack(err))
+	}
+
 	mcpServer.RegisterTool(lsTool, lsHandler)
+	mcpServer.RegisterTool(lsRemoteTool, lsRemoteHandler)
 
 	if err = mcpServer.Run(); err != nil {
 		log.Fatal(errors.WithStack(err))

@@ -21,16 +21,30 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"os/exec"
 
 	"github.com/ThinkInAIXYZ/go-mcp/protocol"
 	"github.com/pkg/errors"
 )
 
-func lsHandler(ctx context.Context, req *protocol.CallToolRequest) (*protocol.CallToolResult, error) {
-	cmd := exec.CommandContext(ctx, "g", "ls", "-o", "json")
+func lsRemoteHandler(ctx context.Context, req *protocol.CallToolRequest) (*protocol.CallToolResult, error) {
+	cmd := exec.CommandContext(ctx, "g", "ls-remote", "-o", "json")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	var items []struct {
+		Version   string `json:"version"`
+		InUse     bool   `json:"inUse"`
+		Installed bool   `json:"installed"`
+	}
+	if json.Unmarshal([]byte(output), &items); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	if output, err = json.Marshal(items); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
