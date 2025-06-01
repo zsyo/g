@@ -8,7 +8,9 @@ GO_FLAGS := -v -ldflags="-X 'github.com/voidint/g/build.Built=$(BUILD_DATE)' -X 
 all: install lint test clean
 
 build:
-	$(GO) build $(GO_FLAGS)
+	mkdir -p bin
+	$(GO) build $(GO_FLAGS) -o ./bin/g
+	$(GO) build $(GO_FLAGS) -o ./bin/g-mcp-server ./cmd/mcp-server/*.go
 
 install: build
 	$(GO) install $(GO_FLAGS)
