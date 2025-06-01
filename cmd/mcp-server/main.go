@@ -59,10 +59,16 @@ func main() {
 		log.Fatal(errors.WithStack(err))
 	}
 
+	useTool, err := protocol.NewTool("g_use", "Switch to specified go sdk version", UseReq{})
+	if err != nil {
+		log.Fatal(errors.WithStack(err))
+	}
+
 	mcpServer.RegisterTool(lsTool, lsHandler)
 	mcpServer.RegisterTool(lsRemoteTool, lsRemoteHandler)
 	mcpServer.RegisterTool(installTool, installHandler)
 	mcpServer.RegisterTool(uninstallTool, uninstallHandler)
+	mcpServer.RegisterTool(useTool, useHandler)
 
 	if err = mcpServer.Run(); err != nil {
 		log.Fatal(errors.WithStack(err))
