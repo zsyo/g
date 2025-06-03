@@ -28,7 +28,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func use(ctx *cli.Context) (err error) {
+func use(ctx *cli.Context) error {
 	vname := ctx.Args().First()
 	if vname == "" {
 		return cli.ShowSubcommandHelp(ctx)
@@ -41,7 +41,7 @@ func use(ctx *cli.Context) (err error) {
 
 	_ = os.Remove(goroot)
 
-	if err = mkSymlink(targetV, goroot); err != nil {
+	if err := mkSymlink(targetV, goroot); err != nil {
 		return cli.Exit(errstring(err), 1)
 	}
 	if output, err := exec.Command(filepath.Join(goroot, "bin", "go"), "version").Output(); err == nil {

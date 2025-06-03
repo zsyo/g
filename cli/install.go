@@ -65,7 +65,8 @@ func install(ctx *cli.Context) (err error) {
 	targetV := filepath.Join(versionsDir, vname)
 
 	// Check if the version is already installed.
-	if finfo, err := os.Stat(targetV); err == nil && finfo.IsDir() {
+	var finfo os.FileInfo
+	if finfo, err = os.Stat(targetV); err == nil && finfo.IsDir() {
 		return cli.Exit(fmt.Sprintf("[g] %q version has been installed.", vname), 1)
 	}
 

@@ -27,7 +27,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func selfUninstall(*cli.Context) (err error) {
+func selfUninstall(*cli.Context) error {
 	menu := wmenu.NewMenu("Are you sure you want to uninstall g?")
 	menu.IsYesNo(wmenu.DefY)
 	menu.Action(func(opts []wmenu.Opt) error {
@@ -43,7 +43,7 @@ func selfUninstall(*cli.Context) (err error) {
 		rmPaths := []string{exePath}
 
 		for {
-			if binPath, err := os.Readlink(exePath); err == nil && binPath != exePath {
+			if binPath, e := os.Readlink(exePath); e == nil && binPath != exePath {
 				rmPaths = append(rmPaths, binPath)
 				exePath = binPath
 			} else {
@@ -70,7 +70,7 @@ func selfUninstall(*cli.Context) (err error) {
 		}
 		return nil
 	})
-	if err = menu.Run(); err != nil {
+	if err := menu.Run(); err != nil {
 		return cli.Exit(errstring(err), 1)
 	}
 	return nil
