@@ -55,12 +55,12 @@ func runMcpServer(_ *cli.Context) (err error) {
 		return cli.Exit(errstring(err), 1)
 	}
 
-	lsTool, err := protocol.NewTool("ls", "List installed go sdk versions", struct{}{})
+	lsTool, err := protocol.NewTool("ls", "List installed go sdk versions", LsReq{})
 	if err != nil {
 		return cli.Exit(errstring(err), 1)
 	}
 
-	lsRemoteTool, err := protocol.NewTool("ls-remote", "List remote go sdk versions available for install", struct{}{})
+	lsRemoteTool, err := protocol.NewTool("ls-remote", "List remote go sdk versions available for install", LsRemoteReq{})
 	if err != nil {
 		return cli.Exit(errstring(err), 1)
 	}
@@ -117,6 +117,9 @@ func cleanHandler(ctx context.Context, req *protocol.CallToolRequest) (*protocol
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
+	if string(output) == "" {
+		output = []byte("Done")
+	}
 
 	return &protocol.CallToolResult{
 		Content: []protocol.Content{
@@ -128,8 +131,17 @@ func cleanHandler(ctx context.Context, req *protocol.CallToolRequest) (*protocol
 	}, nil
 }
 
-func lsHandler(ctx context.Context, req *protocol.CallToolRequest) (*protocol.CallToolResult, error) {
-	cmd := exec.CommandContext(ctx, "g", "ls", "-o", "json")
+type UseReq struct {
+	Version string `json:"version" description:"The specific go sdk version number(e.g. '1.21.4')." required:"true"`
+}
+
+func useHandler(ctx context.Context, req *protocol.CallToolRequest) (*protocol.CallToolResult, error) {
+	var useReq UseReq
+	if err := protocol.VerifyAndUnmarshal(req.RawArguments, &useReq); err != nil {
+		return nil, err
+	}
+
+	cmd := exec.CommandContext(ctx, "g", "use", useReq.Version)
 	output, err := cmd.Output()
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -145,8 +157,56 @@ func lsHandler(ctx context.Context, req *protocol.CallToolRequest) (*protocol.Ca
 	}, nil
 }
 
+type LsReq struct {
+	Output string `json:"output" description:"Output format. Optional values: json, text" required:"false"`
+}
+
+func lsHandler(ctx context.Context, req *protocol.CallToolRequest) (*protocol.CallToolResult, error) {
+	var lsReq LsReq
+	if err := protocol.VerifyAndUnmarshal(req.RawArguments, &lsReq); err != nil {
+		return nil, err
+	}
+
+	switch lsReq.Output {
+	case "json", "text":
+	default:
+		lsReq.Output = "json"
+	}
+
+	cmd := exec.CommandContext(ctx, "g", "ls", "-o", lsReq.Output)
+	output, err := cmd.Output()
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return &protocol.CallToolResult{
+		Content: []protocol.Content{
+			&protocol.TextContent{
+				Type: "text",
+				Text: string(output),
+			},
+		},
+	}, nil
+}
+
+type LsRemoteReq struct {
+	Version string `json:"version" description:"Go sdk version number keywords. Optional values include: stable, unstable, archived, or a version pattern. \nSupported patterns: \n1. Specific version (e.g. '1.21.4'); \n2. Latest version identifier 'latest'; \n3. Wildcards (e.g. '1.21.x', '1.x', '1.18.*'); \n4. Caret ranges for minor version compatibility (e.g. '^1', '^1.18', '^1.18.10'); \n5. Tilde ranges for patch version updates (e.g. '~1.18'); \n6. Greater than comparisons (e.g. '>1.18'); \n7. Less than comparisons (e.g. '<1.16'); \n8. Version ranges (e.g. '1.18-1.20');" required:"false"`
+	Output  string `json:"output" description:"Output format. Optional values: json, text" required:"false"`
+}
+
 func lsRemoteHandler(ctx context.Context, req *protocol.CallToolRequest) (*protocol.CallToolResult, error) {
-	cmd := exec.CommandContext(ctx, "g", "ls-remote", "-o", "json")
+	var lsrReq LsRemoteReq
+	if err := protocol.VerifyAndUnmarshal(req.RawArguments, &lsrReq); err != nil {
+		return nil, err
+	}
+
+	switch lsrReq.Output {
+	case "json", "text":
+	default:
+		lsrReq.Output = "json"
+	}
+
+	cmd := exec.CommandContext(ctx, "g", "ls-remote", "-o", lsrReq.Output, lsrReq.Version)
 	output, err := cmd.Output()
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -176,8 +236,8 @@ func lsRemoteHandler(ctx context.Context, req *protocol.CallToolRequest) (*proto
 }
 
 type InstallReq struct {
-	Version string `json:"version" description:"go sdk version keywords" required:"true"`
-	Nouse   bool   `json:"nouse" description:"don't use the version after installed" required:"false"`
+	Version string `json:"version" description:"Go sdk version number keywords. Keywords match the following patterns: \n1. Specific version (e.g. '1.21.4'); \n2. Latest version identifier 'latest'; \n3. Wildcards (e.g. '1.21.x', '1.x', '1.18.*'); \n4. Caret ranges for minor version compatibility (e.g. '^1', '^1.18', '^1.18.10'); \n5. Tilde ranges for patch version updates (e.g. '~1.18'); \n6. Greater than comparisons (e.g. '>1.18'); \n7. Less than comparisons (e.g. '<1.16'); \n8. Version ranges (e.g. '1.18-1.20');" required:"true"`
+	Nouse   bool   `json:"nouse" description:"Don't use the version after installed." required:"false"`
 }
 
 func installHandler(ctx context.Context, req *protocol.CallToolRequest) (*protocol.CallToolResult, error) {
@@ -209,7 +269,7 @@ func installHandler(ctx context.Context, req *protocol.CallToolRequest) (*protoc
 }
 
 type UninstallReq struct {
-	Version string `json:"version" description:"go sdk version" required:"true"`
+	Version string `json:"version" description:"The specific go sdk version number(e.g. '1.21.4'). " required:"true"`
 }
 
 func uninstallHandler(ctx context.Context, req *protocol.CallToolRequest) (*protocol.CallToolResult, error) {
@@ -220,32 +280,6 @@ func uninstallHandler(ctx context.Context, req *protocol.CallToolRequest) (*prot
 
 	cmd := exec.CommandContext(ctx, "g", "uninstall", uninstallReq.Version)
 	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	return &protocol.CallToolResult{
-		Content: []protocol.Content{
-			&protocol.TextContent{
-				Type: "text",
-				Text: string(output),
-			},
-		},
-	}, nil
-}
-
-type UseReq struct {
-	Version string `json:"version" description:"go sdk version" required:"true"`
-}
-
-func useHandler(ctx context.Context, req *protocol.CallToolRequest) (*protocol.CallToolResult, error) {
-	var useReq UseReq
-	if err := protocol.VerifyAndUnmarshal(req.RawArguments, &useReq); err != nil {
-		return nil, err
-	}
-
-	cmd := exec.CommandContext(ctx, "g", "use", useReq.Version)
-	output, err := cmd.Output()
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
