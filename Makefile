@@ -96,4 +96,7 @@ upgrade-deps:
 	go get -u -v github.com/stretchr/testify@latest
 	go get -u -v golang.org/x/text@latest
 
-.PHONY: all build install install-tools lint test test-coverage view-coverage addlicense package clean upgrade-deps build-linux build-darwin build-windows build-linux-386 build-linux-amd64 build-linux-arm build-linux-arm64 build-linux-s390x build-darwin-amd64 build-darwin-arm64 build-windows-386 build-windows-amd64 build-windows-arm build-windows-arm64
+mcp-inspector: build
+	npx @modelcontextprotocol/inspector ./bin/g mcp
+
+.PHONY: all build install install-tools lint test test-coverage view-coverage addlicense package clean upgrade-deps mcp-inspector build-linux build-darwin build-windows build-linux-386 build-linux-amd64 build-linux-arm build-linux-arm64 build-linux-s390x build-darwin-amd64 build-darwin-arm64 build-windows-386 build-windows-amd64 build-windows-arm build-windows-arm64
