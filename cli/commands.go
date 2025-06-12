@@ -63,7 +63,7 @@ var (
 		},
 		{
 			Name:      "use",
-			Usage:     "Switch to specified version",
+			Usage:     "Switch to specified version. Uses go.mod if available and version is omitted.",
 			UsageText: "g use <version>",
 			Action:    use,
 		},

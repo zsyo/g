@@ -31,6 +31,7 @@ import (
 	"github.com/dixonwille/wlog/v3"
 	"github.com/dixonwille/wmenu/v5"
 	"github.com/mholt/archiver/v3"
+	"github.com/pkg/errors"
 	"github.com/urfave/cli/v2"
 	"github.com/voidint/g/collector"
 	"github.com/voidint/g/version"
@@ -169,13 +170,24 @@ func install(ctx *cli.Context) (err error) {
 		return nil
 	}
 
-	// Recreate symbolic link.
-	_ = os.Remove(goroot)
-
-	if err = mkSymlink(targetV, goroot); err != nil {
+	if err = switchVersion(vname); err != nil {
 		return cli.Exit(errstring(err), 1)
 	}
-	fmt.Printf("Now using go%s\n", v.Name())
+	return nil
+}
+
+func switchVersion(vname string) error {
+	targetV := filepath.Join(versionsDir, vname)
+
+	// Recreate symbolic link
+	_ = os.Remove(goroot)
+
+	if err := mkSymlink(targetV, goroot); err != nil {
+		return errors.WithStack(err)
+	}
+	if output, err := exec.Command(filepath.Join(goroot, "bin", "go"), "version").Output(); err == nil {
+		fmt.Printf("Now using %s", strings.TrimPrefix(string(output), "go version "))
+	}
 	return nil
 }
 
@@ -186,5 +198,8 @@ func mkSymlink(oldname, newname string) (err error) {
 			return nil
 		}
 	}
-	return os.Symlink(oldname, newname)
+	if err = os.Symlink(oldname, newname); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
 }
