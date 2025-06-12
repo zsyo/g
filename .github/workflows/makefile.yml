@@ -29,7 +29,7 @@ jobs:
       - name: Build
         run: |
           make build
-          ./g -v
+          ./bin/g -v
 
       - name: Run coverage
         run: make test-coverage
