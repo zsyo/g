@@ -74,6 +74,34 @@ export G_MIRROR=https://golang.google.cn/dl/
 		EOF
     fi
 
+    if [ -x "$(command -v fish)" ]; then
+        # Create fish-specific env file
+        cat >${HOME}/.g/env.fish <<-'EOF_ENV_FISH'
+# g shell setup for fish
+
+set -gx GOROOT "$HOME/.g/go"
+set -gx G_MIRROR "https://golang.google.cn/dl/"
+
+# Add g, GOROOT/bin, and GOPATH/bin (if set) to PATH using fish_add_path
+fish_add_path "$HOME/.g/bin"
+fish_add_path "$GOROOT/bin"
+
+set -gx GOPATH "$HOME/go"
+
+if set -q GOPATH;
+    fish_add_path "$GOPATH/bin"
+end
+EOF_ENV_FISH
+
+        # Configure fish to source env.fish
+        local fish_conf_d_dir="${HOME}/.config/fish/conf.d"
+        mkdir -p "${fish_conf_d_dir}"
+        cat >"${fish_conf_d_dir}/g.fish" <<-'EOF_G_FISH_CONF'
+# g shell setup
+if test -s "$HOME/.g/env.fish"; and source "$HOME/.g/env.fish"; end
+EOF_G_FISH_CONF
+    fi
+
     echo -e "\nTo configure your current shell, run:\nsource \"$HOME/.g/env\""
 
     exit 0
