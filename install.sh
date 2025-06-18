@@ -39,6 +39,7 @@ function main() {
     echo "[1/3] Downloading ${url}"
     rm -f "${dest_file}"
     if [ -x "$(command -v wget)" ]; then
+        mkdir -p "${HOME}/.g/downloads"
         wget -q -P "${HOME}/.g/downloads" "${url}"
     else
         curl -s -S -L --create-dirs -o "${dest_file}" "${url}"
