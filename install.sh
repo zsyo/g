@@ -55,6 +55,7 @@ function main() {
 #!/bin/sh
 # g shell setup
 export GOROOT="${HOME}/.g/go"
+[ -z "$GOPATH" ] && export GOPATH="${HOME}/go"
 export PATH="${HOME}/.g/bin:${GOROOT}/bin:${GOPATH}/bin:$PATH"
 export G_MIRROR=https://golang.google.cn/dl/
 	EOF
