@@ -39,7 +39,7 @@
   if [[ -n $(alias g 2>/dev/null) ]]; then
       unalias g
   fi
-  EOF 
+  EOF
   $ source "$HOME/.g/env"
   ```
 
@@ -59,7 +59,8 @@
   #!/bin/sh
   # g shell setup
   export GOROOT="${HOME}/.g/go"
-  export PATH="${HOME}/.g/bin:${GOROOT}/bin:$PATH"
+  [ -z "$GOPATH" ] && export GOPATH="${HOME}/go"
+  export PATH="${HOME}/.g/bin:${GOROOT}/bin:${GOPATH}/bin:$PATH"
   export G_MIRROR=https://golang.google.cn/dl/
   EOF
   ```
@@ -68,10 +69,10 @@
 
   ```shell
   $ cat >>~/.bashrc <<'EOF'
-  # g shell setup
-  if [ -f "${HOME}/.g/env" ]; then
-      . "${HOME}/.g/env"
+  if [[ -n $(alias g 2>/dev/null) ]]; then
+      unalias g
   fi
+  [ -s "${HOME}/.g/env" ] && \. "${HOME}/.g/env"  # g shell setup
   EOF
   ```
 
@@ -109,7 +110,7 @@ To install a specific version of Go (e.g., 1.20.5):
 
 ```shell
 $ g install 1.14.7
-Downloading 100% [===============] (92/92 MB, 12 MB/s)               
+Downloading 100% [===============] (92/92 MB, 12 MB/s)
 Computing checksum with SHA256
 Checksums matched
 Now using go1.20.5
@@ -131,7 +132,7 @@ $ g ls-remote
   1.2.2
   1.3
   1.3.1
-  ...    
+  ...
   1.19.10
   1.20rc1
   1.20rc2
@@ -161,7 +162,7 @@ Uninstalled go1.19.10
 To clear the package file cache for Go installations:
 
 ```shell
-$ g clean 
+$ g clean
 Remove go1.18.10.darwin-arm64.tar.gz
 Remove go1.19.10.darwin-arm64.tar.gz
 Remove go1.20.5.darwin-arm64.tar.gz
@@ -232,7 +233,7 @@ Remove /Users/voidint/.g
 - After installing a go version using g, when running the `go version` command, the output shows a different version than the one installed. Is this a bug?
 
   This is likely due to an incorrect setting of the `PATH` environment variable in the current shell environment (it is recommended to run `which go` to see the path of the go binary file). By default, the path to the go binary file should be `~/.g/go/bin/go`. If it is not this path, it means that the PATH environment variable is set incorrectly.
-  
+
 - Does g support compiling and installing from source code?
 
   No, it does not support compiling and installing from source code.
