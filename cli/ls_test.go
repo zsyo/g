@@ -32,15 +32,15 @@ import (
 func TestListLocalVersions(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	os.Mkdir(filepath.Join(tmpDir, "1.25rc1"), 0755)
-	os.Mkdir(filepath.Join(tmpDir, "1.24rc3"), 0755)
-	os.Mkdir(filepath.Join(tmpDir, "1.18beta2"), 0755)
-	os.Mkdir(filepath.Join(tmpDir, "1.19beta1"), 0755)
-	os.Mkdir(filepath.Join(tmpDir, "1.24.4"), 0755)
-	os.Mkdir(filepath.Join(tmpDir, "1.20.14"), 0755)
-	os.Mkdir(filepath.Join(tmpDir, "1.20"), 0755)
-	os.Mkdir(filepath.Join(tmpDir, "invalid_version"), 0755)
-	os.WriteFile(filepath.Join(tmpDir, "not_a_directory"), []byte{}, 0644)
+	_ = os.Mkdir(filepath.Join(tmpDir, "1.25rc1"), 0755)
+	_ = os.Mkdir(filepath.Join(tmpDir, "1.24rc3"), 0755)
+	_ = os.Mkdir(filepath.Join(tmpDir, "1.18beta2"), 0755)
+	_ = os.Mkdir(filepath.Join(tmpDir, "1.19beta1"), 0755)
+	_ = os.Mkdir(filepath.Join(tmpDir, "1.24.4"), 0755)
+	_ = os.Mkdir(filepath.Join(tmpDir, "1.20.14"), 0755)
+	_ = os.Mkdir(filepath.Join(tmpDir, "1.20"), 0755)
+	_ = os.Mkdir(filepath.Join(tmpDir, "invalid_version"), 0755)
+	_ = os.WriteFile(filepath.Join(tmpDir, "not_a_directory"), []byte{}, 0644)
 
 	tests := []struct {
 		name     string
