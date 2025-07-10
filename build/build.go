@@ -28,7 +28,7 @@ import (
 
 const (
 	// ShortVersion short version number
-	ShortVersion = "1.7.0"
+	ShortVersion = "1.8.0"
 )
 
 // The value of variables come form `gb build -ldflags '-X "build.Built=xxxxx" -X "build.CommitID=xxxx"' `
