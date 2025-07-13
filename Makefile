@@ -16,7 +16,7 @@ install: build
 
 build-all: build-linux build-darwin build-windows
 
-build-linux: build-linux-386 build-linux-amd64 build-linux-arm build-linux-arm64 build-linux-s390x
+build-linux: build-linux-386 build-linux-amd64 build-linux-arm build-linux-arm64 build-linux-s390x build-linux-riscv64
 build-linux-386:
 	GOOS=linux GOARCH=386 $(GO) build $(GO_FLAGS) -o bin/linux-386/g
 build-linux-amd64:
@@ -27,6 +27,8 @@ build-linux-arm64:
 	GOOS=linux GOARCH=arm64 $(GO) build $(GO_FLAGS) -o bin/linux-arm64/g
 build-linux-s390x:
 	GOOS=linux GOARCH=s390x $(GO) build $(GO_FLAGS) -o  bin/linux-s390x/g
+build-linux-riscv64:
+	GOOS=linux GOARCH=riscv64 $(GO) build $(GO_FLAGS) -o  bin/linux-riscv64/g
 
 
 build-darwin: build-darwin-amd64 build-darwin-arm64
