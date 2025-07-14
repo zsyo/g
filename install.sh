@@ -19,6 +19,9 @@ function get_arch() {
     "s390x")
         echo "s390x"
         ;;
+    "riscv64")
+        echo "riscv64"
+        ;;
     *)
         echo ${NIL}
         ;;
