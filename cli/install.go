@@ -103,21 +103,25 @@ func install(ctx *cli.Context) (err error) {
 		pkg = pkgs[0]
 	}
 
-	var checksumNotFound, skipChecksum bool
-	if pkg.Checksum == "" && pkg.ChecksumURL == "" {
-		checksumNotFound = true
-		menu := wmenu.NewMenu("Checksum file not found, do you want to continue?")
-		menu.IsYesNo(wmenu.DefN)
-		menu.Action(func(opts []wmenu.Opt) error {
-			skipChecksum = opts[0].Value.(string) == "yes"
-			return nil
-		})
-		if err = menu.Run(); err != nil {
-			return cli.Exit(errstring(err), 1)
+	skipChecksum := ctx.Bool("skip-checksum")
+
+	if !skipChecksum {
+		var checksumNotFound bool
+		if pkg.Checksum == "" && pkg.ChecksumURL == "" {
+			checksumNotFound = true
+			menu := wmenu.NewMenu("Checksum file not found, do you want to continue?")
+			menu.IsYesNo(wmenu.DefN)
+			menu.Action(func(opts []wmenu.Opt) error {
+				skipChecksum = opts[0].Value.(string) == "yes"
+				return nil
+			})
+			if err = menu.Run(); err != nil {
+				return cli.Exit(errstring(err), 1)
+			}
 		}
-	}
-	if checksumNotFound && !skipChecksum {
-		return
+		if checksumNotFound && !skipChecksum {
+			return
+		}
 	}
 
 	var ext string

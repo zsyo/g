@@ -236,8 +236,9 @@ func lsRemoteHandler(ctx context.Context, req *protocol.CallToolRequest) (*proto
 }
 
 type InstallReq struct {
-	Version string `json:"version" description:"Go sdk version number keywords. Keywords match the following patterns: \n1. Specific version (e.g. '1.21.4'); \n2. Latest version identifier 'latest'; \n3. Wildcards (e.g. '1.21.x', '1.x', '1.18.*'); \n4. Caret ranges for minor version compatibility (e.g. '^1', '^1.18', '^1.18.10'); \n5. Tilde ranges for patch version updates (e.g. '~1.18'); \n6. Greater than comparisons (e.g. '>1.18'); \n7. Less than comparisons (e.g. '<1.16'); \n8. Version ranges (e.g. '1.18-1.20');" required:"true"`
-	Nouse   bool   `json:"nouse" description:"Don't use the version after installed." required:"false"`
+	Version      string `json:"version" description:"Go sdk version number keywords. Keywords match the following patterns: \n1. Specific version (e.g. '1.21.4'); \n2. Latest version identifier 'latest'; \n3. Wildcards (e.g. '1.21.x', '1.x', '1.18.*'); \n4. Caret ranges for minor version compatibility (e.g. '^1', '^1.18', '^1.18.10'); \n5. Tilde ranges for patch version updates (e.g. '~1.18'); \n6. Greater than comparisons (e.g. '>1.18'); \n7. Less than comparisons (e.g. '<1.16'); \n8. Version ranges (e.g. '1.18-1.20');" required:"true"`
+	Nouse        bool   `json:"nouse" description:"Don't use the version after installed." required:"false"`
+	SkipChecksum bool   `json:"skip-checksum" description:"Skip checksum verification." required:"false"`
 }
 
 func installHandler(ctx context.Context, req *protocol.CallToolRequest) (*protocol.CallToolResult, error) {
@@ -246,7 +247,7 @@ func installHandler(ctx context.Context, req *protocol.CallToolRequest) (*protoc
 		return nil, err
 	}
 
-	cmd := exec.CommandContext(ctx, "g", "install", fmt.Sprintf("--nouse=%t", installReq.Nouse), installReq.Version)
+	cmd := exec.CommandContext(ctx, "g", "install", fmt.Sprintf("--nouse=%t", installReq.Nouse), fmt.Sprintf("--skip-checksum=%t", installReq.SkipChecksum), installReq.Version)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return nil, errors.WithStack(err)

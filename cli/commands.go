@@ -79,6 +79,10 @@ var (
 					Aliases: []string{"n"},
 					Usage:   "Only install without using",
 				},
+				&cli.BoolFlag{
+					Name:  "skip-checksum",
+					Usage: "Skip checksum verification",
+				},
 			},
 		},
 		{
