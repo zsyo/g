@@ -59,7 +59,8 @@
   #!/bin/sh
   # g shell setup
   export GOROOT="${HOME}/.g/go"
-  export PATH="${HOME}/.g/bin:${GOROOT}/bin:$PATH"
+  [ -z "$GOPATH" ] && export GOPATH="${HOME}/go"
+  export PATH="${HOME}/.g/bin:${GOROOT}/bin:${GOPATH}/bin:$PATH"
   export G_MIRROR=https://golang.google.cn/dl/
   EOF
   ```
@@ -68,10 +69,10 @@
 
   ```shell
   $ cat >>~/.bashrc <<'EOF'
-  # g shell setup
-  if [ -f "${HOME}/.g/env" ]; then
-      . "${HOME}/.g/env"
+  if [[ -n $(alias g 2>/dev/null) ]]; then
+      unalias g
   fi
+  [ -s "${HOME}/.g/env" ] && \. "${HOME}/.g/env"  # g shell setup
   EOF
   ```
 
@@ -195,6 +196,8 @@ Remove /Users/voidint/.g
 
 ## FAQ
 
+
+
 - What is the purpose of the environment variable `G_MIRROR`?
 
   Due to the restricted access to the Golang official website in mainland China, it has become difficult to query and download go versions. Therefore, the environment variable `G_MIRROR` can be used to specify one or multiple mirror sites (separated by commas) from which g will query and download available go versions. The known available mirror sites are as follows:
@@ -204,6 +207,14 @@ Remove /Users/voidint/.g
   - Nanjing University: https://mirrors.nju.edu.cn/golang/
   - Huazhong University of Science and Technology: https://mirrors.hust.edu.cn/golang/
   - University of Science and Technology of China: https://mirrors.ustc.edu.cn/golang/
+
+- What URLs can be used as values for `G_MIRROR`?
+
+  `g` retrieves Go version information by parsing web pages and implements several version collectors for specific page structures. Currently supported collectors include:
+
+  - **Official Collector**: For Go official website. Any page with HTML structure identical to the Go official download page (e.g. `https://go.dev/dl/`) can use this collector. Example: `G_MIRROR=official|https://golang.google.cn/dl/`, where the part before `|` is the collector name and the part after is the target page URL.
+  - **FancyIndex Collector**: For pages rendered by Nginx FancyIndex module. Example: `G_MIRROR=fancyindex|https://mirrors.aliyun.com/golang/`.
+  - **AutoIndex Collector**: For pages rendered by Nginx AutoIndex module. Example: `G_MIRROR=autoindex|https://mirrors.ustc.edu.cn/golang/`.
 
 - What is the purpose of the environment variable `G_EXPERIMENTAL`?
 

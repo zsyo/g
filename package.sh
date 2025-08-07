@@ -19,6 +19,9 @@ function get_arch() {
     "s390x")
         echo "s390x"
         ;;
+    "riscv64")
+        echo "riscv64"
+        ;;
     *)
         echo ${NIL}
         ;;
@@ -54,9 +57,9 @@ main() {
     export GO111MODULE="on"
     export GOPROXY="https://goproxy.cn,direct"
 
-    local release="1.7.0"
+    local release="1.8.0"
 
-    for item in "darwin_amd64" "darwin_arm64" "linux_386" "linux_amd64" "linux_arm" "linux_arm64" "linux_s390x" "windows_386" "windows_amd64" "windows_arm" "windows_arm64"; do
+    for item in "darwin_amd64" "darwin_arm64" "linux_386" "linux_amd64" "linux_arm" "linux_arm64" "linux_s390x" "linux_riscv64" "windows_386" "windows_amd64" "windows_arm" "windows_arm64"; do
         package ${release} ${item}
     done
 

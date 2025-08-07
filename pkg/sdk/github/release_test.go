@@ -1,3 +1,22 @@
+// Copyright (c) 2019 voidint <voidint@126.com>
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of
+// this software and associated documentation files (the "Software"), to deal in
+// the Software without restriction, including without limitation the rights to
+// use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+// the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 package github
 
 import (
@@ -69,12 +88,12 @@ func TestReleaseUpdater_CheckForUpdates(t *testing.T) {
 	_, _ = rr6.WriteString(`{"tag_name": "1.6.0"}`)
 
 	patches := gomonkey.ApplyMethodSeq(&http.Client{}, "Do", []gomonkey.OutputCell{
-		{Values: gomonkey.Params{nil, errors.New("unknown error")}}, // 1、发送查询请求失败
-		{Values: gomonkey.Params{rr2.Result(), nil}},                // 2、得到非成功响应
-		{Values: gomonkey.Params{rr3.Result(), nil}},                // 3、响应内容反序列化错误
-		{Values: gomonkey.Params{rr4.Result(), nil}},                // 4、响应内容中版本号为非语义化版本号
-		{Values: gomonkey.Params{rr5.Result(), nil}},                // 5、响应内容中版本号不大于当前版本号
-		{Values: gomonkey.Params{rr6.Result(), nil}},                // 6、存在新版本号
+		{Values: gomonkey.Params{nil, errors.New("unknown error")}}, // Case 1: Failed to send query request
+		{Values: gomonkey.Params{rr2.Result(), nil}},                // Case 2: Received non-success response
+		{Values: gomonkey.Params{rr3.Result(), nil}},                // Case 3: Response deserialization error
+		{Values: gomonkey.Params{rr4.Result(), nil}},                // Case 4: Non-semantic version in response
+		{Values: gomonkey.Params{rr5.Result(), nil}},                // Case 5: No newer version available
+		{Values: gomonkey.Params{rr6.Result(), nil}},                // Case 6: New version exists
 	})
 	defer patches.Reset()
 

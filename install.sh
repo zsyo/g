@@ -19,6 +19,9 @@ function get_arch() {
     "s390x")
         echo "s390x"
         ;;
+    "riscv64")
+        echo "riscv64"
+        ;;
     *)
         echo ${NIL}
         ;;
@@ -30,7 +33,7 @@ function get_os() {
 }
 
 function main() {
-    local release="1.7.0"
+    local release="1.8.0"
     local os=$(get_os)
     local arch=$(get_arch)
     local dest_file="${HOME}/.g/downloads/g${release}.${os}-${arch}.tar.gz"
@@ -39,6 +42,7 @@ function main() {
     echo "[1/3] Downloading ${url}"
     rm -f "${dest_file}"
     if [ -x "$(command -v wget)" ]; then
+        mkdir -p "${HOME}/.g/downloads"
         wget -q -P "${HOME}/.g/downloads" "${url}"
     else
         curl -s -S -L --create-dirs -o "${dest_file}" "${url}"
@@ -54,6 +58,7 @@ function main() {
 #!/bin/sh
 # g shell setup
 export GOROOT="${HOME}/.g/go"
+[ -z "$GOPATH" ] && export GOPATH="${HOME}/go"
 export PATH="${HOME}/.g/bin:${GOROOT}/bin:${GOPATH}/bin:$PATH"
 export G_MIRROR=https://golang.google.cn/dl/
 	EOF
@@ -72,6 +77,34 @@ export G_MIRROR=https://golang.google.cn/dl/
 [ -s "${HOME}/.g/env" ] && \. "${HOME}/.g/env"  # g shell setup
 
 		EOF
+    fi
+
+    if [ -x "$(command -v fish)" ]; then
+        # Create fish-specific env file
+        cat >${HOME}/.g/env.fish <<-'EOF_ENV_FISH'
+# g shell setup for fish
+
+set -gx GOROOT "$HOME/.g/go"
+set -gx G_MIRROR "https://golang.google.cn/dl/"
+
+# Add g, GOROOT/bin, and GOPATH/bin (if set) to PATH using fish_add_path
+fish_add_path "$HOME/.g/bin"
+fish_add_path "$GOROOT/bin"
+
+set -gx GOPATH "$HOME/go"
+
+if set -q GOPATH;
+    fish_add_path "$GOPATH/bin"
+end
+EOF_ENV_FISH
+
+        # Configure fish to source env.fish
+        local fish_conf_d_dir="${HOME}/.config/fish/conf.d"
+        mkdir -p "${fish_conf_d_dir}"
+        cat >"${fish_conf_d_dir}/g.fish" <<-'EOF_G_FISH_CONF'
+# g shell setup
+if test -s "$HOME/.g/env.fish"; and source "$HOME/.g/env.fish"; end
+EOF_G_FISH_CONF
     fi
 
     echo -e "\nTo configure your current shell, run:\nsource \"$HOME/.g/env\""

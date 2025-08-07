@@ -59,7 +59,8 @@
   #!/bin/sh
   # g shell setup
   export GOROOT="${HOME}/.g/go"
-  export PATH="${HOME}/.g/bin:${GOROOT}/bin:$PATH"
+  [ -z "$GOPATH" ] && export GOPATH="${HOME}/go"
+  export PATH="${HOME}/.g/bin:${GOROOT}/bin:${GOPATH}/bin:$PATH"
   export G_MIRROR=https://golang.google.cn/dl/
   EOF
   ```
@@ -68,10 +69,10 @@
 
   ```shell
   $ cat >>~/.bashrc <<'EOF'
-  # g shell setup
-  if [ -f "${HOME}/.g/env" ]; then
-      . "${HOME}/.g/env"
+  if [[ -n $(alias g 2>/dev/null) ]]; then
+      unalias g
   fi
+  [ -s "${HOME}/.g/env" ] && \. "${HOME}/.g/env"  # g shell setup
   EOF
   ```
 
@@ -204,6 +205,13 @@ Remove /Users/voidint/.g
   - 南京大学开源镜像站：https://mirrors.nju.edu.cn/golang/
   - 华中科技大学开源镜像站：https://mirrors.hust.edu.cn/golang/
   - 中国科学技术大学开源镜像站：https://mirrors.ustc.edu.cn/golang/
+
+- 哪些站点的 URL 可以作为`G_MIRROR`的值？
+  `g`通过网页解析的方式获取其中包含的 Go 版本信息，针对特定类型的网页结构实现了若干的版本采集器。目前支持的采集器包括以下几种：
+  - **Official Collector** ：Go官网采集器。只要网页 HTML 结构和 golang 官方下载页面(如`https://go.dev/dl/`)一致，都可以使用该采集器。设置示例，如`G_MIRROR=official|https://golang.google.cn/dl/`，其中，`|`之前的部分为采集器名称，之后的部分为目标页面的 URL。
+  - **FancyIndex Collector**：适用于 Nginx FancyIndex 模块渲染的网页。设置示例，如`G_MIRROR=fancyindex|https://mirrors.aliyun.com/golang/`。
+  - **AutoIndex Collector**：适用于 Nginx AutoIndex 模块渲染的网页。设置示例，如`G_MIRROR=autoindex|https://mirrors.ustc.edu.cn/golang/`。
+
 
 - 环境变量`G_EXPERIMENTAL`有什么作用？
 

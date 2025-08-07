@@ -1,3 +1,22 @@
+// Copyright (c) 2019 voidint <voidint@126.com>
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of
+// this software and associated documentation files (the "Software"), to deal in
+// the Software without restriction, including without limitation the rights to
+// use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+// the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 package official
 
 import (
@@ -18,14 +37,14 @@ const (
 	Name = "official"
 )
 
-// Collector 官方站点版本采集器
+// Collector collects Go versions from official download page.
 type Collector struct {
 	url  string
 	pURL *stdurl.URL
 	doc  *goquery.Document
 }
 
-// NewCollector 返回采集器实例
+// NewCollector creates a new collector instance for official Go downloads.
 func NewCollector(downloadPageURL string) (*Collector, error) {
 	if downloadPageURL == "" {
 		return nil, errs.ErrEmptyURL
@@ -89,12 +108,12 @@ func (c *Collector) findPackages(table *goquery.Selection) (pkgs []*version.Pack
 	return pkgs
 }
 
-// hasUnstableVersions 返回是否包含非稳定版本的布尔值
+// hasUnstableVersions checks if unstable versions exist in document.
 func (c *Collector) hasUnstableVersions() bool {
 	return c.doc.Find("#unstable").Length() > 0
 }
 
-// StableVersions Return all stable versions
+// StableVersions retrieves all stable Go versions from official releases.
 func (c *Collector) StableVersions() (items []*version.Version, err error) {
 	var divs *goquery.Selection
 	if c.hasUnstableVersions() {
@@ -128,7 +147,7 @@ func (c *Collector) StableVersions() (items []*version.Version, err error) {
 	return items, nil
 }
 
-// UnstableVersions Return all stable versions
+// UnstableVersions fetches pre-release and development builds of Go.
 func (c *Collector) UnstableVersions() (items []*version.Version, err error) {
 	c.doc.Find("#unstable").NextUntil("#archive").EachWithBreak(func(i int, div *goquery.Selection) bool {
 		vname, ok := div.Attr("id")
@@ -155,7 +174,7 @@ func (c *Collector) UnstableVersions() (items []*version.Version, err error) {
 	return items, nil
 }
 
-// ArchivedVersions Return all archived versions
+// ArchivedVersions provides historical Go versions no longer supported.
 func (c *Collector) ArchivedVersions() (items []*version.Version, err error) {
 	c.doc.Find("#archive").Find("div.toggle").EachWithBreak(func(i int, div *goquery.Selection) bool {
 		vname, ok := div.Attr("id")
@@ -182,7 +201,7 @@ func (c *Collector) ArchivedVersions() (items []*version.Version, err error) {
 	return items, nil
 }
 
-// AllVersions 返回所有已知版本
+// AllVersions returns all known Go versions including stable/unstable/archived.
 func (c *Collector) AllVersions() (items []*version.Version, err error) {
 	items, err = c.StableVersions()
 	if err != nil {

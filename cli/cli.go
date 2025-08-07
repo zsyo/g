@@ -25,7 +25,7 @@ var (
 	copyroot     string
 )
 
-// Run 运行g命令行
+// Run executes the g command line interface.
 func Run() {
 	app := cli.NewApp()
 	app.Name = "g"
@@ -97,7 +97,7 @@ const (
 	mirrorSep = ","
 )
 
-// ghome 返回g根目录
+// ghome returns the root directory of g installations.
 func ghome() (dir string) {
 	if experimental := os.Getenv(experimentalEnv); strings.EqualFold(experimental, "true") {
 		if dir = os.Getenv(homeEnv); dir != "" {
@@ -108,13 +108,13 @@ func ghome() (dir string) {
 	return filepath.Join(homeDir, ".g")
 }
 
-// inuse 返回当前的go版本号
+// inuse detects currently active Go version.
 func inuse(goroot string) (version string) {
 	p, _ := os.Readlink(goroot)
 	return filepath.Base(p)
 }
 
-// installed 返回当前的已经安装的go版本号
+// installed lists all downloaded Go versions.
 func installed() (versions map[string]bool) {
 	dirs, err := os.ReadDir(versionsDir)
 	if err != nil {
@@ -146,7 +146,7 @@ const (
 	jsonMode = 1
 )
 
-// render 渲染go版本列表
+// render outputs version list in specified format.
 func render(mode uint8, installed map[string]bool, items []*version.Version, out io.Writer) {
 	switch mode {
 	case jsonMode:
@@ -188,7 +188,7 @@ func gcopy() bool {
 	return strings.ToLower(os.Getenv(copyEnv)) == "true"
 }
 
-// errstring 返回统一格式的错误信息
+// errstring formats error messages with consistent style.
 func errstring(err error) string {
 	if err == nil {
 		return ""

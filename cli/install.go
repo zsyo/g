@@ -1,3 +1,22 @@
+// Copyright (c) 2019 voidint <voidint@126.com>
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of
+// this software and associated documentation files (the "Software"), to deal in
+// the Software without restriction, including without limitation the rights to
+// use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+// the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 package cli
 
 import (
@@ -13,6 +32,7 @@ import (
 	"github.com/dixonwille/wlog/v3"
 	"github.com/dixonwille/wmenu/v5"
 	"github.com/mholt/archiver/v3"
+	"github.com/pkg/errors"
 	"github.com/urfave/cli/v2"
 	"github.com/voidint/g/collector"
 	"github.com/voidint/g/version"
@@ -24,7 +44,7 @@ func install(ctx *cli.Context) (err error) {
 		return cli.ShowSubcommandHelp(ctx)
 	}
 
-	// 查找版本
+	// Find matching Go version.
 	c, err := collector.NewCollector(strings.Split(os.Getenv(mirrorEnv), mirrorSep)...)
 	if err != nil {
 		return cli.Exit(errstring(err), 1)
@@ -46,12 +66,13 @@ func install(ctx *cli.Context) (err error) {
 	vname = v.Name()
 	targetV := filepath.Join(versionsDir, vname)
 
-	// 检查版本是否已经安装
-	if finfo, err := os.Stat(targetV); err == nil && finfo.IsDir() {
+	// Check if the version is already installed.
+	var finfo os.FileInfo
+	if finfo, err = os.Stat(targetV); err == nil && finfo.IsDir() {
 		return cli.Exit(fmt.Sprintf("[g] %q version has been installed.", vname), 1)
 	}
 
-	// 查找版本下当前平台的安装包
+	// Find installation packages for current platform
 	pkgs, err := v.FindPackages(version.ArchiveKind, runtime.GOOS, runtime.GOARCH)
 	if err != nil {
 		return cli.Exit(errstring(err), 1)
@@ -83,21 +104,25 @@ func install(ctx *cli.Context) (err error) {
 		pkg = pkgs[0]
 	}
 
-	var checksumNotFound, skipChecksum bool
-	if pkg.Checksum == "" && pkg.ChecksumURL == "" {
-		checksumNotFound = true
-		menu := wmenu.NewMenu("Checksum file not found, do you want to continue?")
-		menu.IsYesNo(wmenu.DefN)
-		menu.Action(func(opts []wmenu.Opt) error {
-			skipChecksum = opts[0].Value.(string) == "yes"
-			return nil
-		})
-		if err = menu.Run(); err != nil {
-			return cli.Exit(errstring(err), 1)
+	skipChecksum := ctx.Bool("skip-checksum")
+
+	if !skipChecksum {
+		var checksumNotFound bool
+		if pkg.Checksum == "" && pkg.ChecksumURL == "" {
+			checksumNotFound = true
+			menu := wmenu.NewMenu("Checksum file not found, do you want to continue?")
+			menu.IsYesNo(wmenu.DefN)
+			menu.Action(func(opts []wmenu.Opt) error {
+				skipChecksum = opts[0].Value.(string) == "yes"
+				return nil
+			})
+			if err = menu.Run(); err != nil {
+				return cli.Exit(errstring(err), 1)
+			}
 		}
-	}
-	if checksumNotFound && !skipChecksum {
-		return
+		if checksumNotFound && !skipChecksum {
+			return
+		}
 	}
 
 	var ext string
@@ -109,7 +134,7 @@ func install(ctx *cli.Context) (err error) {
 	filename := filepath.Join(downloadsDir, fmt.Sprintf("go%s.%s-%s.%s", vname, runtime.GOOS, runtime.GOARCH, ext))
 
 	if _, err = os.Stat(filename); os.IsNotExist(err) {
-		// 本地不存在安装包，从远程下载并检查校验和。
+		// Download package remotely and verify checksum.
 		if _, err = pkg.DownloadWithProgress(filename); err != nil {
 			return cli.Exit(errstring(err), 1)
 		}
@@ -124,7 +149,7 @@ func install(ctx *cli.Context) (err error) {
 
 	} else {
 		if !skipChecksum {
-			// 本地存在安装包，检查校验和。
+			// Verify checksum for local package.
 			fmt.Println("Computing checksum with", pkg.Algorithm)
 			if err = pkg.VerifyChecksum(filename); err != nil {
 				_ = os.Remove(filename)
@@ -134,14 +159,14 @@ func install(ctx *cli.Context) (err error) {
 		}
 	}
 
-	// 删除可能存在的历史垃圾文件
+	// Clean up legacy files.
 	_ = os.RemoveAll(filepath.Join(versionsDir, "go"))
 
-	// 解压安装包
+	// Extract installation archive.
 	if err = archiver.Unarchive(filename, versionsDir); err != nil {
 		return cli.Exit(errstring(err), 1)
 	}
-	// 目录重命名
+	// Rename version directory.
 	if err = os.Rename(filepath.Join(versionsDir, "go"), targetV); err != nil {
 		return cli.Exit(errstring(err), 1)
 	}
@@ -150,10 +175,7 @@ func install(ctx *cli.Context) (err error) {
 		return nil
 	}
 
-	// 重新建立软链接
-	_ = os.Remove(goroot)
-
-	if err = mkSymlink(targetV, goroot); err != nil {
+	if err = switchVersion(vname); err != nil {
 		return cli.Exit(errstring(err), 1)
 	}
 
@@ -166,7 +188,21 @@ func install(ctx *cli.Context) (err error) {
 		}
 	}
 
-	fmt.Printf("Now using go%s\n", v.Name())
+	return nil
+}
+
+func switchVersion(vname string) error {
+	targetV := filepath.Join(versionsDir, vname)
+
+	// Recreate symbolic link
+	_ = os.Remove(goroot)
+
+	if err := mkSymlink(targetV, goroot); err != nil {
+		return errors.WithStack(err)
+	}
+	if output, err := exec.Command(filepath.Join(goroot, "bin", "go"), "version").Output(); err == nil {
+		fmt.Printf("Now using %s", strings.TrimPrefix(string(output), "go version "))
+	}
 	return nil
 }
 
@@ -177,7 +213,10 @@ func mkSymlink(oldname, newname string) (err error) {
 			return nil
 		}
 	}
-	return os.Symlink(oldname, newname)
+	if err = os.Symlink(oldname, newname); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
 }
 
 // copyDir 拷贝一个目录及其子目录和文件到另一个目录

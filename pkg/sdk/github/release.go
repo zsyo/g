@@ -1,3 +1,22 @@
+// Copyright (c) 2019 voidint <voidint@126.com>
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of
+// this software and associated documentation files (the "Software"), to deal in
+// the Software without restriction, including without limitation the rights to
+// use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+// the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 package github
 
 import (
@@ -18,34 +37,34 @@ import (
 	"github.com/voidint/go-update"
 )
 
-// Release 版本
+// Release represents a software version release.
 type Release struct {
 	TagName string  `json:"tag_name"`
 	Assets  []Asset `json:"assets"`
 }
 
-// Asset 静态资源
+// Asset contains downloadable resource files.
 type Asset struct {
 	Name               string `json:"name"`
 	ContentType        string `json:"content_type"`
 	BrowserDownloadURL string `json:"browser_download_url"`
 }
 
-// IsCompressedFile 返回是否是压缩文件的布尔值
+// IsCompressedFile checks if the file is in compressed format.
 func (a Asset) IsCompressedFile() bool {
 	return a.ContentType == "application/zip" || a.ContentType == "application/x-gzip"
 }
 
-// ReleaseUpdater 版本更新器
+// ReleaseUpdater handles version update checks and operations.
 type ReleaseUpdater struct {
 }
 
-// NewReleaseUpdater 返回版本更新器实例
+// NewReleaseUpdater creates a release update handler instance.
 func NewReleaseUpdater() *ReleaseUpdater {
 	return new(ReleaseUpdater)
 }
 
-// CheckForUpdates 检查是否有更新
+// CheckForUpdates verifies if newer version exists.
 func (up ReleaseUpdater) CheckForUpdates(current *semver.Version, owner, repo string) (rel *Release, yes bool, err error) {
 	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/releases/latest", owner, repo)
 
@@ -80,24 +99,24 @@ func (up ReleaseUpdater) CheckForUpdates(current *semver.Version, owner, repo st
 	return nil, false, nil
 }
 
-// Apply 更新指定版本
+// Apply performs version update to specified release.
 func (up ReleaseUpdater) Apply(rel *Release,
 	findAsset func([]Asset) (idx int),
 	findChecksum func([]Asset) (algo checksum.Algorithm, expectedChecksum string, err error),
 ) error {
-	// 查找下载链接
+	// findDownloadLink locates asset download URL.
 	idx := findAsset(rel.Assets)
 	if idx < 0 {
 		return errs.ErrAssetNotFound
 	}
 
-	// 查找校验和
+	// findChecksum verifies file integrity hash.
 	algo, expectedChecksum, err := findChecksum(rel.Assets)
 	if err != nil {
 		return err
 	}
 
-	// 下载文件
+	// downloadFile fetches remote resource.
 	tmpDir, err := os.MkdirTemp("", strconv.FormatInt(time.Now().UnixNano(), 10))
 	if err != nil {
 		return err
@@ -111,21 +130,21 @@ func (up ReleaseUpdater) Apply(rel *Release,
 		return err
 	}
 
-	// 检查校验和
+	// verifyChecksum validates file hash.
 	fmt.Println("Computing checksum with", algo)
 	if err = checksum.VerifyFile(algo, expectedChecksum, srcFilename); err != nil {
 		return err
 	}
 	fmt.Println("Checksums matched")
 
-	// 解压缩下载文件
+	// extractFile handles archive decompression.
 	if rel.Assets[idx].IsCompressedFile() {
 		if dstFilename, err = up.unarchive(srcFilename, tmpDir); err != nil {
 			return err
 		}
 	}
 
-	// 更新文件
+	// updateBinary replaces old executable.
 	dstFile, err := os.Open(dstFilename)
 	if err != nil {
 		return nil
@@ -134,12 +153,12 @@ func (up ReleaseUpdater) Apply(rel *Release,
 	return update.Apply(dstFile, update.Options{})
 }
 
-// unarchive 解压缩至目标目录下并返回首个解压后的文件
+// unarchive extracts compressed files to target directory and returns first extracted file.
 func (up ReleaseUpdater) unarchive(srcFile, dstDir string) (dstFile string, err error) {
 	if err = archiver.Unarchive(srcFile, dstDir); err != nil {
 		return "", err
 	}
-	// 找到解压缩后的目标文件
+	// locateTargetFile finds the main executable after extraction.
 	fis, _ := os.ReadDir(dstDir)
 	for _, fi := range fis {
 		if strings.HasSuffix(srcFile, fi.Name()) {

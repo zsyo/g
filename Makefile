@@ -8,14 +8,15 @@ GO_FLAGS := -v -ldflags="-X 'github.com/voidint/g/build.Built=$(BUILD_DATE)' -X 
 all: install lint test clean
 
 build:
-	$(GO) build $(GO_FLAGS)
+	mkdir -p bin
+	$(GO) build $(GO_FLAGS) -o ./bin/g
 
 install: build
 	$(GO) install $(GO_FLAGS)
 
 build-all: build-linux build-darwin build-windows
 
-build-linux: build-linux-386 build-linux-amd64 build-linux-arm build-linux-arm64 build-linux-s390x
+build-linux: build-linux-386 build-linux-amd64 build-linux-arm build-linux-arm64 build-linux-s390x build-linux-riscv64
 build-linux-386:
 	GOOS=linux GOARCH=386 $(GO) build $(GO_FLAGS) -o bin/linux-386/g
 build-linux-amd64:
@@ -26,6 +27,8 @@ build-linux-arm64:
 	GOOS=linux GOARCH=arm64 $(GO) build $(GO_FLAGS) -o bin/linux-arm64/g
 build-linux-s390x:
 	GOOS=linux GOARCH=s390x $(GO) build $(GO_FLAGS) -o  bin/linux-s390x/g
+build-linux-riscv64:
+	GOOS=linux GOARCH=riscv64 $(GO) build $(GO_FLAGS) -o  bin/linux-riscv64/g
 
 
 build-darwin: build-darwin-amd64 build-darwin-arm64
@@ -50,10 +53,14 @@ package:
 
 install-tools:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-	go install honnef.co/go/tools/cmd/staticcheck@2023.1
+	go install honnef.co/go/tools/cmd/staticcheck@latest
 	go install github.com/securego/gosec/v2/cmd/gosec@latest
+	go install github.com/google/addlicense@latest
 
-lint: install-tools
+
+lint:
+	# Please make sure you are using the latest go version before executing lint
+	@go version
 	go vet ./...
 	golangci-lint run ./...
 	staticcheck ./...
@@ -68,6 +75,9 @@ test-coverage:
 view-coverage: test-coverage
 	go tool cover -html=coverage.txt
 	rm -f coverage.txt
+
+addlicense:
+	addlicense -v -c "voidint <voidint@126.com>" -l mit -ignore '.github/**' -ignore 'vendor/**' -ignore '**/*.yml' -ignore '**/*.html' -ignore '**/*.sh' .
 
 clean:
 	$(GO) clean -x
@@ -88,4 +98,7 @@ upgrade-deps:
 	go get -u -v github.com/stretchr/testify@latest
 	go get -u -v golang.org/x/text@latest
 
-.PHONY: all build install install-tools lint test test-coverage view-coverage package clean upgrade-deps build-linux build-darwin build-windows build-linux-386 build-linux-amd64 build-linux-arm build-linux-arm64 build-linux-s390x build-darwin-amd64 build-darwin-arm64 build-windows-386 build-windows-amd64 build-windows-arm build-windows-arm64
+mcp-inspector: build
+	npx @modelcontextprotocol/inspector ./bin/g mcp
+
+.PHONY: all build install install-tools lint test test-coverage view-coverage addlicense package clean upgrade-deps mcp-inspector build-linux build-darwin build-windows build-linux-386 build-linux-amd64 build-linux-arm build-linux-arm64 build-linux-s390x build-linux-riscv64 build-darwin-amd64 build-darwin-arm64 build-windows-386 build-windows-amd64 build-windows-arm build-windows-arm64

@@ -1,3 +1,22 @@
+// Copyright (c) 2019 voidint <voidint@126.com>
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of
+// this software and associated documentation files (the "Software"), to deal in
+// the Software without restriction, including without limitation the rights to
+// use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+// the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 package version
 
 import (
@@ -11,7 +30,7 @@ import (
 	httppkg "github.com/voidint/g/pkg/http"
 )
 
-// Semantify go 版本号并未完全遵循语义化版本号标准，该函数进行了一定的适配，返回一个语义化版本。
+// Semantify converts Go version strings to semantic version format with adaptation.
 func Semantify(vname string) (*semver.Version, error) {
 	var idx int
 	if strings.Contains(vname, "alpha") {
@@ -34,20 +53,21 @@ func Semantify(vname string) (*semver.Version, error) {
 	return sv, nil
 }
 
-// Version go版本
+// Version represents a Go language distribution version.
 type Version struct {
-	name string // 源版本名，如'1.12.4'，不完全等于sv.Original()
+	name string // Original version name (e.g. '1.12.4'), may differ from semver format
 	sv   *semver.Version
 	pkgs []*Package
 }
 
-// WithPackages 设置版本下的软件包列表
+// WithPackages configures available distribution packages for the version.
 func WithPackages(pkgs []*Package) func(v *Version) {
 	return func(v *Version) {
 		v.pkgs = pkgs
 	}
 }
 
+// New creates a Version instance with semantic version validation.
 func New(name string, opts ...func(v *Version)) (*Version, error) {
 	sv, err := Semantify(name)
 	if err != nil {
@@ -77,12 +97,12 @@ func MustNew(name string, opts ...func(v *Version)) *Version {
 	return v
 }
 
-// Name 返回版本号
+// Name returns original version string (e.g. 'go1.21.4').
 func (v *Version) Name() string {
 	return v.name
 }
 
-// Packages 返回软件包列表
+// Packages returns all distribution packages for different OS/ARCH combinations.
 func (v *Version) Packages() []Package {
 	items := make([]Package, 0, len(v.pkgs))
 	for _, pkg := range v.pkgs {
@@ -91,21 +111,21 @@ func (v *Version) Packages() []Package {
 	return items
 }
 
-// MatchConstraint 检查当前版本是否满足约束条件
+// MatchConstraint checks if version satisfies semantic version constraints.
 func (v *Version) MatchConstraint(c *semver.Constraints) bool {
 	return c.Check(v.sv)
 }
 
 func (v *Version) match(goos, goarch string) bool {
 	for _, pkg := range v.pkgs {
-		if strings.Contains(pkg.FileName, goos) && strings.Contains(pkg.FileName, goarch) { // TODO 不够严谨
+		if strings.Contains(pkg.FileName, goos) && strings.Contains(pkg.FileName, goarch) { // TODO: Improve architecture matching logic
 			return true
 		}
 	}
 	return false
 }
 
-// FindPackages 返回指定操作系统和硬件架构的版本包
+// FindPackages discovers packages matching specific OS/ARCH and package type.
 func (v *Version) FindPackages(kind PackageKind, goos, goarch string) (pkgs []Package, err error) {
 	prefix := fmt.Sprintf("go%s.%s-%s", v.name, goos, goarch)
 	for i := range v.pkgs {
@@ -120,7 +140,7 @@ func (v *Version) FindPackages(kind PackageKind, goos, goarch string) (pkgs []Pa
 	return pkgs, nil
 }
 
-// Package go版本安装包
+// Package describes a Go distribution file metadata.
 type Package struct {
 	FileName    string      `json:"filename"`
 	URL         string      `json:"url"`
@@ -133,24 +153,24 @@ type Package struct {
 	Algorithm   string      `json:"algorithm"` // checksum algorithm
 }
 
-// PackageKind 软件包种类
+// PackageKind indicates distribution package format type.
 type PackageKind string
 
 const (
-	// SourceKind go安装包种类-源码
+	// SourceKind indicates source code package
 	SourceKind PackageKind = "Source"
-	// ArchiveKind go安装包种类-压缩文件
+	// ArchiveKind indicates compressed archive package
 	ArchiveKind PackageKind = "Archive"
-	// InstallerKind go安装包种类-可安装程序
+	// InstallerKind indicates executable installer
 	InstallerKind PackageKind = "Installer"
 )
 
-// DownloadWithProgress 下载版本另存为指定文件且显示下载进度
+// DownloadWithProgress fetches package with real-time download metrics.
 func (pkg *Package) DownloadWithProgress(dst string) (size int64, err error) {
 	return httppkg.Download(pkg.URL, dst, os.O_CREATE|os.O_WRONLY, 0644, true)
 }
 
-// VerifyChecksum 验证目标文件的校验和与当前安装包的校验和是否一致
+// VerifyChecksum validates downloaded file against cryptographic hash.
 func (pkg *Package) VerifyChecksum(filename string) (err error) {
 	if pkg.Checksum == "" && pkg.ChecksumURL != "" {
 		data, err := httppkg.DownloadAsBytes(pkg.ChecksumURL)
