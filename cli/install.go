@@ -38,8 +38,21 @@ import (
 	"github.com/voidint/g/version"
 )
 
-func install(ctx *cli.Context) (err error) {
-	vname := ctx.Args().First()
+func installList(ctx *cli.Context) (err error) {
+	vs := ctx.Args().Slice()
+	if len(vs) == 0 {
+		return cli.ShowSubcommandHelp(ctx)
+	}
+	for _, vname := range vs {
+		err = install(ctx, vname)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func install(ctx *cli.Context, vname string) (err error) {
 	if vname == "" {
 		return cli.ShowSubcommandHelp(ctx)
 	}

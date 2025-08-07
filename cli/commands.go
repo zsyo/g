@@ -72,7 +72,7 @@ var (
 			Aliases:   []string{"i"},
 			Usage:     "Download and install a version",
 			UsageText: "g install <version>",
-			Action:    install,
+			Action:    installList,
 			Flags: []cli.Flag{
 				&cli.BoolFlag{
 					Name:    "nouse",
@@ -89,7 +89,7 @@ var (
 			Name:      "uninstall",
 			Usage:     "Uninstall a version",
 			UsageText: "g uninstall <version>",
-			Action:    uninstall,
+			Action:    uninstallList,
 		},
 		{
 			Name:      "update",
